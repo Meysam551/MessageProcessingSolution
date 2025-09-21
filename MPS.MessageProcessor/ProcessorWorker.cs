@@ -1,5 +1,6 @@
 ﻿
 using Distributor.Grpc;
+using Grpc.Core;
 using Grpc.Net.Client;
 
 namespace MPS.MessageProcessor;
@@ -15,33 +16,33 @@ public class ProcessorWorker
     }
 
 
-    //public async Task RunAsync(CancellationToken ct)
-    //{
-    //    using var channel = GrpcChannel.ForAddress(_address);
-    //    //var client = new Distributor.DistributorClient(channel);
+    public async Task RunAsync(CancellationToken ct)
+    {
+        using var channel = GrpcChannel.ForAddress(_address);
+        var client = new DistributorService.DistributorServiceClient(channel);
 
 
-    //    using var call = client.Connect();
+        using var call = client.Connect();
 
 
-    //    // send intro
-    //    await call.RequestStream.WriteAsync(new IntroMessage { Id = GenerateUniqueId(), Type = "RegexEngine" });
+        // send intro
+        await call.RequestStream.WriteAsync(new IntroMessage { Id = GenerateUniqueId(), Type = "RegexEngine" });
 
 
-    //    // read messages and process
-    //    var readTask = Task.Run(async () =>
-    //    {
-    //        await foreach (var msg in call.ResponseStream.ReadAllAsync(ct))
-    //        {
-    //            // analyze message
-    //            var result = Analyze(msg, new Dictionary<string, string>());
-    //            // TODO: send result back (depending on proto shape)
-    //        }
-    //    }, ct);
+        // read messages and process
+        var readTask = Task.Run(async () =>
+        {
+            await foreach (var msg in call.ResponseStream.ReadAllAsync(ct))
+            {
+                // analyze message
+                var result = Analyze(msg, new Dictionary<string, string>());
+                // TODO: send result back (depending on proto shape)
+            }
+        }, ct);
 
 
-    //    await readTask;
-    //}
+        await readTask;
+    }
 
 
     private string GenerateUniqueId()
